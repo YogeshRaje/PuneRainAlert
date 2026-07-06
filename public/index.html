@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚨 Pune Rain Red Alert System | IMD + IBM watsonx.ai</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── HEADER ─────────────────────────────────────────────── -->
+  <header class="header" id="mainHeader">
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="brand-logos">
+          <div class="logo-badge imd-badge">IMD</div>
+          <div class="logo-divider"></div>
+          <div class="logo-badge ibm-badge">IBM</div>
+        </div>
+        <div class="header-title">
+          <h1>Pune District Rain Alert System</h1>
+          <p>India Meteorological Department &nbsp;|&nbsp; Powered by IBM watsonx.ai</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <div class="district-badge" id="districtBadge">
+          <span class="badge-icon" id="badgeIcon">🌧</span>
+          <div>
+            <div class="badge-level" id="badgeLevel">LOADING...</div>
+            <div class="badge-label">District Alert</div>
+          </div>
+        </div>
+        <div class="last-update">
+          <span class="dot-pulse" id="liveDot"></span>
+          <span id="lastUpdateTime">Connecting...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── TICKER / IMD BULLETIN ──────────────────────────────── -->
+  <div class="ticker-container" id="tickerContainer">
+    <div class="ticker-label">📡 IMD LIVE</div>
+    <div class="ticker-track">
+      <div class="ticker-content" id="tickerText">Loading IMD bulletin...</div>
+    </div>
+  </div>
+
+  <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
+  <main class="main-container">
+
+    <!-- Alert Banner -->
+    <div class="alert-banner" id="alertBanner" style="display:none;">
+      <div class="alert-banner-icon" id="alertBannerIcon">🚨</div>
+      <div class="alert-banner-text">
+        <strong id="alertBannerTitle">RED ALERT ISSUED</strong>
+        <span id="alertBannerDesc">Extremely Heavy Rainfall expected in Pune district</span>
+      </div>
+      <button class="btn-dismiss" onclick="dismissBanner()">✕</button>
+    </div>
+
+    <!-- ── STAT CARDS ──────────────────────────────────────── -->
+    <section class="stats-grid" id="statsGrid">
+      <div class="stat-card red-card">
+        <div class="stat-icon">🔴</div>
+        <div class="stat-value" id="redCount">--</div>
+        <div class="stat-label">Red Alert Stations</div>
+        <div class="stat-sub">≥115.5 mm/hr</div>
+      </div>
+      <div class="stat-card orange-card">
+        <div class="stat-icon">🟠</div>
+        <div class="stat-value" id="orangeCount">--</div>
+        <div class="stat-label">Orange Alert Stations</div>
+        <div class="stat-sub">64.5–115.4 mm/hr</div>
+      </div>
+      <div class="stat-card yellow-card">
+        <div class="stat-icon">🟡</div>
+        <div class="stat-value" id="yellowCount">--</div>
+        <div class="stat-label">Yellow Alert Stations</div>
+        <div class="stat-sub">35.6–64.4 mm/hr</div>
+      </div>
+      <div class="stat-card max-card">
+        <div class="stat-icon">💧</div>
+        <div class="stat-value" id="maxRainfall">--</div>
+        <div class="stat-label">Max Rainfall</div>
+        <div class="stat-sub" id="maxStation">mm/hr</div>
+      </div>
+      <div class="stat-card avg-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value" id="avgRainfall">--</div>
+        <div class="stat-label">District Average</div>
+        <div class="stat-sub">mm/hr</div>
+      </div>
+    </section>
+
+    <!-- ── TWO-COLUMN LAYOUT ──────────────────────────────── -->
+    <div class="content-grid">
+
+      <!-- LEFT: Map + Station Table -->
+      <div class="col-left">
+
+        <!-- Pune District Map -->
+        <div class="card">
+          <div class="card-header">
+            <h2>📍 Pune District — IMD Station Map</h2>
+            <span class="card-tag" id="stationCount">14 Stations</span>
+          </div>
+          <div class="map-container">
+            <svg id="puneMap" viewBox="0 0 600 500" class="pune-map">
+              <!-- Background -->
+              <rect width="600" height="500" fill="#0d1117" rx="8"/>
+              <!-- Grid lines -->
+              <g stroke="#1e2936" stroke-width="0.5">
+                <line x1="0" y1="100" x2="600" y2="100"/>
+                <line x1="0" y1="200" x2="600" y2="200"/>
+                <line x1="0" y1="300" x2="600" y2="300"/>
+                <line x1="0" y1="400" x2="600" y2="400"/>
+                <line x1="100" y1="0" x2="100" y2="500"/>
+                <line x1="200" y1="0" x2="200" y2="500"/>
+                <line x1="300" y1="0" x2="300" y2="500"/>
+                <line x1="400" y1="0" x2="400" y2="500"/>
+                <line x1="500" y1="0" x2="500" y2="500"/>
+              </g>
+              <!-- Compass -->
+              <text x="30" y="30" fill="#57606a" font-size="11" font-family="monospace">N↑</text>
+              <!-- Pune district outline (approximate) -->
+              <polygon points="80,60 200,40 320,50 450,80 530,150 540,280 500,400 380,460 250,470 130,430 60,330 50,200 80,60"
+                fill="rgba(59,130,212,0.05)" stroke="#1e3a5f" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <!-- Stations rendered by JS -->
+              <g id="mapStations"></g>
+              <!-- Legend -->
+              <g transform="translate(15,430)">
+                <rect width="170" height="65" fill="rgba(13,17,23,0.85)" rx="4" stroke="#1e2936"/>
+                <circle cx="18" cy="16" r="5" fill="#ef4444"/>
+                <text x="28" y="20" fill="#cdd6e0" font-size="10">Red Alert (≥115.5)</text>
+                <circle cx="18" cy="32" r="5" fill="#f97316"/>
+                <text x="28" y="36" fill="#cdd6e0" font-size="10">Orange (64.5-115.4)</text>
+                <circle cx="18" cy="48" r="5" fill="#eab308"/>
+                <text x="28" y="52" fill="#cdd6e0" font-size="10">Yellow (35.6-64.4)</text>
+                <circle cx="100" cy="16" r="5" fill="#22c55e"/>
+                <text x="110" y="20" fill="#cdd6e0" font-size="10">Normal</text>
+              </g>
+            </svg>
+            <div class="map-tooltip" id="mapTooltip" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Station Table -->
+        <div class="card mt-16">
+          <div class="card-header">
+            <h2>🏭 IMD Station Data</h2>
+            <div class="filter-tabs">
+              <button class="filter-btn active" onclick="filterStations('ALL')">All</button>
+              <button class="filter-btn" onclick="filterStations('RED')">🔴 Red</button>
+              <button class="filter-btn" onclick="filterStations('ORANGE')">🟠 Orange</button>
+              <button class="filter-btn" onclick="filterStations('YELLOW')">🟡 Yellow</button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table class="station-table" id="stationTable">
+              <thead>
+                <tr>
+                  <th>Station</th>
+                  <th>Taluka</th>
+                  <th>Rain (mm/hr)</th>
+                  <th>24hr (mm)</th>
+                  <th>Alert</th>
+                  <th>Humidity</th>
+                  <th>Wind</th>
+                </tr>
+              </thead>
+              <tbody id="stationTableBody">
+                <tr><td colspan="7" class="loading-row"><div class="spinner"></div>Loading IMD data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /col-left -->
+
+      <!-- RIGHT: AI Analysis + Alerts Panel -->
+      <div class="col-right">
+
+        <!-- IBM watsonx.ai Analysis -->
+        <div class="card ai-card">
+          <div class="card-header">
+            <h2>🤖 IBM watsonx.ai Analysis</h2>
+            <span class="ibm-tag">granite-3-8b-instruct</span>
+          </div>
+          <div class="ai-panel" id="aiPanel">
+            <div class="ai-placeholder">
+              <div class="ai-logo">🧠</div>
+              <p>Click "Analyze with watsonx.ai" to get AI-powered<br/>rainfall analysis for Pune district</p>
+            </div>
+          </div>
+          <div class="ai-actions">
+            <button class="btn-primary" id="analyzeBtn" onclick="runAIAnalysis()">
+              🔍 Analyze with watsonx.ai
+            </button>
+            <button class="btn-secondary" onclick="refreshData()">
+              🔄 Refresh IMD Data
+            </button>
+          </div>
+          <div class="ai-meta" id="aiMeta" style="display:none;">
+            <span id="aiTimestamp"></span>
+            <span>Model: ibm/granite-3-8b-instruct</span>
+          </div>
+        </div>
+
+        <!-- Active Alerts -->
+        <div class="card mt-16">
+          <div class="card-header">
+            <h2>🚨 Active Alerts</h2>
+            <span class="pulse-dot" id="alertPulse"></span>
+          </div>
+          <div class="alerts-list" id="alertsList">
+            <div class="loading-placeholder">Loading alerts...</div>
+          </div>
+        </div>
+
+        <!-- IMD Bulletin -->
+        <div class="card mt-16">
+          <div class="card-header">
+            <h2>📋 IMD Official Bulletin</h2>
+            <button class="btn-icon" onclick="refreshData()" title="Refresh">🔄</button>
+          </div>
+          <div class="bulletin-list" id="bulletinList">
+            <div class="loading-placeholder">Fetching bulletin...</div>
+          </div>
+        </div>
+
+        <!-- Rain Gauge Chart -->
+        <div class="card mt-16">
+          <div class="card-header">
+            <h2>📈 Station Rainfall Chart</h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="rainfallChart" width="380" height="220"></canvas>
+          </div>
+        </div>
+
+        <!-- Emergency Contacts -->
+        <div class="card mt-16 emergency-card">
+          <div class="card-header">
+            <h2>🆘 Emergency Contacts</h2>
+          </div>
+          <div class="emergency-grid">
+            <a href="tel:1078" class="emergency-item">
+              <div class="em-icon">🚒</div>
+              <div>
+                <div class="em-name">NDRF/SDRF</div>
+                <div class="em-number">1078</div>
+              </div>
+            </a>
+            <a href="tel:100" class="emergency-item">
+              <div class="em-icon">👮</div>
+              <div>
+                <div class="em-name">Police</div>
+                <div class="em-number">100</div>
+              </div>
+            </a>
+            <a href="tel:101" class="emergency-item">
+              <div class="em-icon">🔥</div>
+              <div>
+                <div class="em-name">Fire Brigade</div>
+                <div class="em-number">101</div>
+              </div>
+            </a>
+            <a href="tel:108" class="emergency-item">
+              <div class="em-icon">🚑</div>
+              <div>
+                <div class="em-name">Ambulance</div>
+                <div class="em-number">108</div>
+              </div>
+            </a>
+            <a href="tel:1800-120-1099" class="emergency-item">
+              <div class="em-icon">🏛</div>
+              <div>
+                <div class="em-name">MSDMA</div>
+                <div class="em-number">1800-120-1099</div>
+              </div>
+            </a>
+            <a href="tel:020-26123456" class="emergency-item">
+              <div class="em-icon">🌤</div>
+              <div>
+                <div class="em-name">IMD Pune</div>
+                <div class="em-number">020-26123456</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </div><!-- /col-right -->
+    </div><!-- /content-grid -->
+
+  </main>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        🌧 Pune Rain Alert System &nbsp;|&nbsp; 
+        <span>IMD Pune Meteorological Centre</span> &nbsp;|&nbsp;
+        <span>Powered by IBM watsonx.ai</span>
+      </div>
+      <div class="footer-right">
+        Data refreshes every 2 minutes &nbsp;|&nbsp; For emergencies call <strong>1078</strong>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

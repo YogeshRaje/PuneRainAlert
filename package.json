@@ -1,0 +1,31 @@
+{
+  "name": "pune-rain-alert-system",
+  "version": "1.0.0",
+  "description": "Live Rain Red Alert System for Pune District with IMD information powered by IBM watsonx.ai",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@ngrok/ngrok": "^1.7.0",
+    "axios": "1.18.1",
+    "cors": "2.8.6",
+    "dotenv": "16.6.1",
+    "express": "4.22.2",
+    "node-fetch": "2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "3.1.14"
+  },
+  "keywords": [
+    "pune",
+    "rain",
+    "alert",
+    "IMD",
+    "watsonx",
+    "IBM"
+  ],
+  "author": "Maharashtra Rain Alert System",
+  "license": "MIT"
+}
