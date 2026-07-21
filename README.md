@@ -140,7 +140,15 @@ npm start
 - **Frontend**: Vanilla HTML · CSS · JavaScript (no frameworks)
 - **Data**: IMD Pune Meteorological Centre (14 stations)
 
----
+---<img width="1915" height="1129" alt="image" src="https://github.com/user-attachments/assets/7f6af801-8899-4e5f-bb06-6a2c0f4c611b" />
+
+<img width="940" height="524" alt="image" src="https://github.com/user-attachments/assets/deabaa79-5208-421b-96e4-867e8a954617" />
+
+
+<img width="940" height="491" alt="image" src="https://github.com/user-attachments/assets/be64f915-fe78-40cb-b302-a2ebf64c8191" />
+
+
+
 
 ## 📄 License
 
